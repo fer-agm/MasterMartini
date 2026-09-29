@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MasterMartini_mejorSola"
+rootProject.name = "MasterMartini"
 include(":app")
