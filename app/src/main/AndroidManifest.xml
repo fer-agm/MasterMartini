@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Internet: solo para cargar miniaturas de videos enlazados (no se descargan videos) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Recurso nativo 1: cámara (foto de perfil) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Recurso nativo 2: vibración (retroalimentación háptica ante errores) -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <application
+        android:name=".MartiniApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="Master Martini"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MasterMartini">
+
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

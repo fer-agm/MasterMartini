@@ -1,0 +1,137 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
+package cl.mastermartini.app
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.*
+import androidx.navigation.navArgument
+import cl.mastermartini.app.data.UserEntity
+import cl.mastermartini.app.ui.components.LocalHaptics
+import cl.mastermartini.app.ui.screens.*
+import cl.mastermartini.app.ui.theme.MartiniTheme
+import cl.mastermartini.app.viewmodel.*
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            val settings: SettingsViewModel = viewModel()
+            val prefs by settings.prefs.collectAsState()
+            MartiniTheme(prefs) {
+                CompositionLocalProvider(LocalHaptics provides prefs.haptics) {
+                    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) { AppRoot(settings) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppRoot(settings: SettingsViewModel) {
+    val auth: AuthViewModel = viewModel()
+    val session by auth.session.collectAsState()
+    when (val s = session) {
+        Session.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
+        Session.Out -> AuthNav(auth)
+        is Session.In -> MainNav(s.user, auth, settings)
+    }
+}
+
+@Composable
+private fun AuthNav(auth: AuthViewModel) {
+    val nav = rememberNavController()
+    NavHost(nav, startDestination = "login", enterTransition = { fadeIn() }, exitTransition = { fadeOut() }) {
+        composable("login") { LoginScreen(auth) { auth.clearError(); nav.navigate("register") } }
+        composable("register") { RegisterScreen(auth) { auth.clearError(); nav.popBackStack() } }
+    }
+}
+
+private data class Tab(val route: String, val label: String, val icon: ImageVector)
+
+private val tabs = listOf(
+    Tab("feed", "Inicio", Icons.Filled.Home),
+    Tab("recipes", "Recetas", Icons.Filled.RestaurantMenu),
+    Tab("profile", "Perfil", Icons.Filled.Person),
+    Tab("accessibility", "Accesibilidad", Icons.Filled.Accessibility)
+)
+
+private fun titleFor(route: String?) = when {
+    route == null -> ""
+    route.startsWith("recipe/") -> "Receta"
+    else -> when (route) {
+        "feed" -> "Master Martini"; "recipes" -> "Recetas"; "profile" -> "Mi perfil"
+        "accessibility" -> "Accesibilidad"; "recipe_form" -> "Nueva receta"; "post_form" -> "Nueva publicación"
+        "quiz" -> "Encuesta de intereses"; "contact" -> "Contacto"; "dashboard" -> "Panel de segmentación"
+        else -> ""
+    }
+}
+
+@Composable
+private fun MainNav(user: UserEntity, auth: AuthViewModel, settings: SettingsViewModel) {
+    val nav = rememberNavController()
+    val content: ContentViewModel = viewModel()
+    val profile: ProfileViewModel = viewModel()
+    val prefs by settings.prefs.collectAsState()
+    val entry by nav.currentBackStackEntryAsState()
+    val route = entry?.destination?.route
+    val isTab = tabs.any { it.route == route }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(titleFor(route)) },
+                navigationIcon = {
+                    if (!isTab) IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver") }
+                },
+                actions = {
+                    if (route != "contact") IconButton(onClick = { nav.navigate("contact") }) { Icon(Icons.Filled.SupportAgent, "Contacto de la marca") }
+                }
+            )
+        },
+        bottomBar = {
+            if (isTab) NavigationBar {
+                tabs.forEach { t ->
+                    NavigationBarItem(
+                        selected = route == t.route,
+                        onClick = { nav.navigate(t.route) { popUpTo("feed") { saveState = true }; launchSingleTop = true; restoreState = true } },
+                        icon = { Icon(t.icon, null) }, label = { Text(t.label) }
+                    )
+                }
+            }
+        }
+    ) { pad ->
+        NavHost(nav, startDestination = "feed", modifier = Modifier.padding(pad),
+            enterTransition = { fadeIn() }, exitTransition = { fadeOut() }) {
+            composable("feed") { FeedScreen(user, content, onNewPost = { nav.navigate("post_form") }, onQuiz = { nav.navigate("quiz") }) }
+            composable("recipes") { RecipesScreen(user, content, onOpen = { nav.navigate("recipe/$it") }, onNew = { nav.navigate("recipe_form") }) }
+            composable("recipe/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) {
+                RecipeDetailScreen(it.arguments!!.getLong("id"), user, content) { nav.popBackStack() }
+            }
+            composable("recipe_form") { RecipeFormScreen(user, content) { nav.popBackStack() } }
+            composable("post_form") { PostFormScreen(user, content) { nav.popBackStack() } }
+            composable("profile") {
+                ProfileScreen(user, profile, onQuiz = { nav.navigate("quiz") }, onContact = { nav.navigate("contact") },
+                    onDashboard = { nav.navigate("dashboard") }, onLogout = { auth.logout() })
+            }
+            composable("quiz") { QuizScreen(user, profile) { nav.popBackStack() } }
+            composable("accessibility") { AccessibilityScreen(prefs, settings) }
+            composable("contact") { ContactScreen(user, content) }
+            composable("dashboard") { DashboardScreen(content) }
+        }
+    }
+}
