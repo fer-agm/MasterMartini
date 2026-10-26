@@ -3,6 +3,7 @@
 package cl.mastermartini.app.ui.screens
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -34,11 +35,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import cl.mastermartini.app.R
 import cl.mastermartini.app.data.Prefs
 import cl.mastermartini.app.data.UserEntity
 import cl.mastermartini.app.domain.QuizData
@@ -224,14 +227,16 @@ private fun SwitchRow(title: String, subtitle: String, icon: androidx.compose.ui
 
 // ───────────────────────── CONTACTO DE LA MARCA ─────────────────────────
 
-// Datos FICTICIOS: reemplazar por los datos oficiales autorizados.
-private const val BRAND_PHONE = "+56 2 2345 6789"
-private const val BRAND_EMAIL = "contacto@mastermartini.example"
-private const val BRAND_ADDRESS = "Av. Ejemplo 1234, Santiago, Chile"
-private const val BRAND_WEB = "https://www.mastermartini.example"
+private const val BRAND_PHONE = "+56 2 26611700"
+private const val BRAND_EMAIL = "Correo: clientes@mastermartini.cl"
+private const val BRAND_ADDRESS = "Avenida Américo Vespucio 1385.\n" +
+        "Centro SpacioFlex, Módulo 3.\n" +
+        "Quilicura, Santiago."
+private const val BRAND_WEB = "https://mastermartini.cl/retail/"
+private const val BRAND_WHATSAPP = "+56 9 4457 0770"
 
 @Composable
-fun ContactScreen(user: UserEntity, vm: ContentViewModel) {
+fun ContactScreen(user: UserEntity, vm: ContentViewModel, openWhatsApp: (Context, String, String) -> Unit) {
     val f = vm.contactForm
     val ctx = LocalContext.current
     val haptics = LocalHaptics.current
@@ -246,8 +251,13 @@ fun ContactScreen(user: UserEntity, vm: ContentViewModel) {
                 ContactRow(Icons.Filled.Email, "Correo", BRAND_EMAIL) { sendEmail(ctx, BRAND_EMAIL, "Consulta desde la app") }
                 ContactRow(Icons.Filled.Place, "Cómo llegar", BRAND_ADDRESS) { openMap(ctx, BRAND_ADDRESS) }
                 ContactRow(Icons.Filled.Language, "Sitio web", BRAND_WEB) { openUrl(ctx, BRAND_WEB) }
+
+                ContactRow(painterResource(R.drawable.logo_wsp), "Whatsapp", BRAND_WHATSAPP) {
+                    openWhatsApp(ctx, BRAND_WHATSAPP, "Hola Master Martini, tengo una consulta...")
+                }
             }
         }
+
         SectionTitle("Envíanos un mensaje")
         ValidatedField("Nombre", f.value("name"), { f.set("name", it) }, f.error("name"), f.isValid("name"), Icons.Filled.Person)
         ValidatedField("Correo", f.value("email"), { f.set("email", it) }, f.error("email"), f.isValid("email"), Icons.Filled.Email,
@@ -275,6 +285,15 @@ private fun ContactRow(icon: androidx.compose.ui.graphics.vector.ImageVector, ti
         modifier = Modifier.clickable(onClickLabel = title, onClick = onClick)
     )
 }
+@Composable
+private fun ContactRow(painter: androidx.compose.ui.graphics.painter.Painter, title: String, value: String, onClick: () -> Unit) {
+    ListItem(
+        headlineContent = { Text(title, fontWeight = FontWeight.Bold) },
+        supportingContent = { Text(value) },
+        leadingContent = { Icon(painter, null, tint = MaterialTheme.colorScheme.primary) },
+        modifier = Modifier.clickable(onClickLabel = title, onClick = onClick)
+    )
+}
 
 // ───────────────────────── PANEL MARKETING ─────────────────────────
 
@@ -291,7 +310,7 @@ fun DashboardScreen(vm: ContentViewModel) {
         Text("Clientes registrados: ${clients.size} · Encuesta respondida: $answered", fontWeight = FontWeight.Bold)
         SectionTitle("Por tipo de negocio")
         byType.entries.sortedByDescending { it.value }.forEach { (k, v) -> BarRow(k, v, clients.size.coerceAtLeast(1)) }
-        SectionTitle("Por área de interés (toca para segmentar)")
+        SectionTitle("Por área de interés (toca para filtrar)")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             byArea.entries.sortedByDescending { it.value }.forEach { (k, v) ->
                 FilterChip(selected = area == k, onClick = { area = if (area == k) null else k }, label = { Text("$k ($v)") })
@@ -308,7 +327,6 @@ fun DashboardScreen(vm: ContentViewModel) {
                 }
             }
         }
-        Text("Datos ficticios con fines académicos.", style = MaterialTheme.typography.bodySmall)
     }
 }
 

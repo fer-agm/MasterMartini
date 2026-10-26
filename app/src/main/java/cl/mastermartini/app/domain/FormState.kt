@@ -8,7 +8,10 @@ class FormState(
     private val rules: Map<String, Rule>,
     private val initial: Map<String, String> = emptyMap()
 ) {
-    val values = mutableStateMapOf<String, String>().apply { putAll(initial) }
+    val values = mutableStateMapOf<String, String>().apply {
+        rules.keys.forEach { put(it, initial[it] ?: "") }
+        putAll(initial)
+    }
     private val touched = mutableStateMapOf<String, Boolean>()
 
     fun value(k: String): String = values[k] ?: ""
@@ -21,7 +24,12 @@ class FormState(
         return rules.values.all { it(values) == null }
     }
 
-    fun reset() { values.clear(); values.putAll(initial); touched.clear() }
+    fun reset() {
+        values.clear()
+        rules.keys.forEach { values[it] = initial[it] ?: "" }
+        values.putAll(initial)
+        touched.clear()
+    }
 }
 
 object Forms {

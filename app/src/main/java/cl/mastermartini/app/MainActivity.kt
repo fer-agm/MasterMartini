@@ -2,6 +2,9 @@
 
 package cl.mastermartini.app
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,6 +28,7 @@ import cl.mastermartini.app.ui.components.LocalHaptics
 import cl.mastermartini.app.ui.screens.*
 import cl.mastermartini.app.ui.theme.MartiniTheme
 import cl.mastermartini.app.viewmodel.*
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,6 +84,19 @@ private fun titleFor(route: String?) = when {
         else -> ""
     }
 }
+fun openWhatsApp(context: Context, phone: String, message: String = "Hola, me gustaría recibir más información desde la app.") {
+    val formattedNumber = phone.replace("+", "").replace(" ", "")
+    val encodedMessage = Uri.encode(message)
+    try {
+        val url = "https://api.whatsapp.com/send?phone=$formattedNumber&text=$encodedMessage"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        context.startActivity(intent)
+    } catch (_: Exception) {
+        val url = "https://wa.me/$formattedNumber?text=$encodedMessage"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        context.startActivity(intent)
+    }
+}
 
 @Composable
 private fun MainNav(user: UserEntity, auth: AuthViewModel, settings: SettingsViewModel) {
@@ -130,8 +147,9 @@ private fun MainNav(user: UserEntity, auth: AuthViewModel, settings: SettingsVie
             }
             composable("quiz") { QuizScreen(user, profile) { nav.popBackStack() } }
             composable("accessibility") { AccessibilityScreen(prefs, settings) }
-            composable("contact") { ContactScreen(user, content) }
+         //   composable("contact") { ContactScreen(user, content,) }
             composable("dashboard") { DashboardScreen(content) }
+            composable("contact") { ContactScreen(user, content, ::openWhatsApp) }
         }
     }
 }

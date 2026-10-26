@@ -145,7 +145,6 @@ fun RegisterScreen(vm: AuthViewModel, onBack: () -> Unit) {
                 enabled = !vm.loading,
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) { Text("Crear cuenta") }
-            Text("Usa solo datos ficticios: este es un MVP académico.", style = MaterialTheme.typography.bodySmall)
         }
     }
 }
