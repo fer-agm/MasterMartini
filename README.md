@@ -7,7 +7,8 @@ Master Martini
 Funcionalidades: 
 3 perfiles de acceso: Cliente, Chef y Marketing.
 Inicio (feed) → publicaciones de marketing.
-Recetas.
+Recetas → recetas de marketing y chefs
+marketing puede editar todos los posts, chefs las recetas
 Videos con enlace.
 Encuesta de intereses.
 Accesibilidad.
