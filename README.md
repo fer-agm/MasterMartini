@@ -25,10 +25,10 @@ nativeaccess/
 
 Cuentas demo
    Cliente: cliente@demo.cl / Cliente123
-   Cehf: chef@demo.cl / Chef1234 // Código de registro: CHEF2026
+   Chef: chef@demo.cl / Chef1234 // Código de registro: CHEF2026
    Marketing: mkt@demo.cl / Mkt12345  // Código de registro: MKT2026
 
 
 
-Test unitario: ./gradlew testDebugUnitTest
+Test unitario: se ejecutan desde Android Studio
 
