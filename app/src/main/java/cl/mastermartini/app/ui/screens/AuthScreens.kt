@@ -50,8 +50,13 @@ fun LoginScreen(vm: AuthViewModel, onRegister: () -> Unit) {
             textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(8.dp))
 
-        ValidatedField("Correo electrónico", f.value("email"), { vm.clearError(); f.set("email", it) },
-            f.error("email"), f.isValid("email"), Icons.Filled.Email, keyboard = KeyboardType.Email)
+        ValidatedField("Correo electrónico", f.value("email"),
+
+            { newValue ->
+                val processedValue = newValue.replace(' ','@')
+                vm.clearError(); f.set("email", processedValue) },
+            f.error("email"), f.isValid("email"), Icons.Filled.Email, keyboard = KeyboardType.Email
+        )
         ValidatedField("Contraseña", f.value("password"), { vm.clearError(); f.set("password", it) },
             f.error("password"), false, Icons.Filled.Lock, password = true, imeAction = ImeAction.Done)
 
@@ -109,7 +114,11 @@ fun RegisterScreen(vm: AuthViewModel, onBack: () -> Unit) {
 
             ValidatedField("Nombre completo", f.value("name"), { f.set("name", it) },
                 f.error("name"), f.isValid("name"), Icons.Filled.Person)
-            ValidatedField("Correo electrónico", f.value("email"), { vm.clearError(); f.set("email", it) },
+            ValidatedField("Correo electrónico", f.value("email"),
+                { newValue ->
+                    val processedValue = newValue.replace(' ','@')
+                    vm.clearError(); f.set("email", processedValue) },
+
                 f.error("email"), f.isValid("email"), Icons.Filled.Email, keyboard = KeyboardType.Email)
             ValidatedField("Teléfono", f.value("phone"), { f.set("phone", it) },
                 f.error("phone"), f.isValid("phone"), Icons.Filled.Phone, keyboard = KeyboardType.Phone)
