@@ -142,8 +142,8 @@ fun RecipesScreen(user: UserEntity, vm: ContentViewModel, onOpen: (Long) -> Unit
     var query by remember { mutableStateOf("") }
     val ctx = LocalContext.current
     val voice = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
-        val text = res.data?.getStringArrayExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
-        if (res.resultCode == -1 && text != null) query = text
+        val text = res.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+        if (res.resultCode == Activity.RESULT_OK && text != null) query = text
     }
     fun startVoice(){
         val i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{
