@@ -80,6 +80,8 @@ fun LoginScreen(vm: AuthViewModel, onRegister: () -> Unit) {
                 Text("Cliente: cliente@demo.cl / Cliente123")
                 Text("Chef: chef@demo.cl / Chef1234")
                 Text("Marketing: mkt@demo.cl / Mkt12345")
+                Text("Código de acceso interno CHEF2026 / MKT2026")
+
             }
         }
     }

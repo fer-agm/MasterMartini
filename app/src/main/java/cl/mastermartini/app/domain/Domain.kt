@@ -24,7 +24,7 @@ object QuizData {
     val questions = listOf(
         QuizQuestion("¿Qué tipo de contenido prefieres?",
             listOf("Recetas simples", "Videos técnicos", "Cursos de especialidad")),
-        QuizQuestion("¿Qué áreas te interesan? (puedes elegir varias)", Categories.recipe, multi = true),
+        QuizQuestion("¿Qué áreas te interesan? (Marca todas las que apliquen)", Categories.recipe, multi = true),
         QuizQuestion("¿Cuál es tu nivel de experiencia?",
             listOf("Estoy comenzando", "Intermedio", "Profesional")),
         QuizQuestion("¿Cómo prefieres que te contactemos?",
