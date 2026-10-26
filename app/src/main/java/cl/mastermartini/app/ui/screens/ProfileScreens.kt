@@ -228,7 +228,7 @@ private fun SwitchRow(title: String, subtitle: String, icon: androidx.compose.ui
 // ───────────────────────── CONTACTO DE LA MARCA ─────────────────────────
 
 private const val BRAND_PHONE = "+56 2 26611700"
-private const val BRAND_EMAIL = "Correo: clientes@mastermartini.cl"
+private const val BRAND_EMAIL = "clientes@mastermartini.cl"
 private const val BRAND_ADDRESS = "Avenida Américo Vespucio 1385.\n" +
         "Centro SpacioFlex, Módulo 3.\n" +
         "Quilicura, Santiago."
