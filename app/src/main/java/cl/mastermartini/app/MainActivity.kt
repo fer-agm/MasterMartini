@@ -2,10 +2,12 @@
 
 package cl.mastermartini.app
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.fadeIn
@@ -84,19 +86,29 @@ private fun titleFor(route: String?) = when {
         else -> ""
     }
 }
-fun openWhatsApp(context: Context, phone: String, message: String = "Hola, me gustaría recibir más información desde la app.") {
-    val formattedNumber = phone.replace("+", "").replace(" ", "")
-    val encodedMessage = Uri.encode(message)
-    try {
-        val url = "https://api.whatsapp.com/send?phone=$formattedNumber&text=$encodedMessage"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        context.startActivity(intent)
-    } catch (_: Exception) {
-        val url = "https://wa.me/$formattedNumber?text=$encodedMessage"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        context.startActivity(intent)
+fun openWhatsApp(
+    context: Context,
+    phone: String,
+    message: String = "Hola Master Martini, tengo una consulta..."
+) {
+    val number = phone.filter { it.isDigit() }   // "+56 9 4457 0770" -> "56944570770"
+    val text = Uri.encode(message)
+    val urls = listOf(
+        "https://api.whatsapp.com/send?phone=$number&text=$text",
+        "https://wa.me/$number?text=$text"
+    )
+
+    for (url in urls) {
+        try {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            return
+        } catch (_: ActivityNotFoundException) {
+        }
     }
+
+    Toast.makeText(context, "No se pudo abrir WhatsApp en este dispositivo", Toast.LENGTH_SHORT).show()
 }
+
 
 @Composable
 private fun MainNav(user: UserEntity, auth: AuthViewModel, settings: SettingsViewModel) {
