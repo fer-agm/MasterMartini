@@ -17,14 +17,13 @@ val Cream = Color(255,255,255)
 
 private val LightScheme = lightColorScheme(
     primary = Green, onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFDAD9), onPrimaryContainer = Color(0xFF410008),
+    primaryContainer = Color(0xFFD6EFE9), onPrimaryContainer = Color(0xFF00201B),
     secondary = Gold, onSecondary = Color.Black,
     background = Cream, onBackground = Color(0xFF1C1B1F),
     surface = Color.White, onSurface = Color(0xFF1C1B1F),
     error = Color(0xFFB3261E)
 )
 
-// Alto contraste (WCAG AAA aprox.) para usuarios con dificultades visuales.
 private val ContrastScheme = lightColorScheme(
     primary = Color.Black, onPrimary = Color.White,
     primaryContainer = Color(0xFFFFEB3B), onPrimaryContainer = Color.Black,
@@ -62,7 +61,6 @@ private val MartiniTypography = with(Typography()) {
 @Composable
 fun MartiniTheme(prefs: Prefs, content: @Composable () -> Unit) {
     val d = LocalDensity.current
-    // El factor de texto elegido por el usuario multiplica el tamaño de fuente del sistema.
     CompositionLocalProvider(LocalDensity provides Density(d.density, d.fontScale * prefs.textScale)) {
         MaterialTheme(
             colorScheme = if (prefs.highContrast) ContrastScheme else LightScheme,
