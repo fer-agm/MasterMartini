@@ -12,7 +12,7 @@ Videos con enlace.
 Encuesta de intereses.
 Accesibilidad.
 Formularios validados.
-Recursos nativos.
+Recursos nativos → cámara, vibración, reconocimiento de voz.
 
 
 Arquitectura

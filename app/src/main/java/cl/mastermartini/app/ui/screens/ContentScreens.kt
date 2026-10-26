@@ -2,6 +2,10 @@
 
 package cl.mastermartini.app.ui.screens
 
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
@@ -41,6 +45,14 @@ import cl.mastermartini.app.nativeaccess.openUrl
 import cl.mastermartini.app.ui.components.*
 import cl.mastermartini.app.viewmodel.ContentViewModel
 import coil.compose.AsyncImage
+import android.Manifest
+import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+
 
 
 @Composable
@@ -128,6 +140,27 @@ fun RecipesScreen(user: UserEntity, vm: ContentViewModel, onOpen: (Long) -> Unit
     val recipes by vm.recipes.collectAsState()
     val favs by remember(user.id) { vm.favorites(user.id) }.collectAsState(emptySet())
     var query by remember { mutableStateOf("") }
+    val ctx = LocalContext.current
+    val voice = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+        val text = res.data?.getStringArrayExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+        if (res.resultCode == -1 && text != null) query = text
+    }
+    fun startVoice(){
+        val i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-CL")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Di una receta")
+        }
+        try { voice.launch(i) }
+        catch (e:ActivityNotFoundException){
+            Toast.makeText(ctx, "Este dispositivo no tiene reconocimiento de voz", Toast.LENGTH_SHORT).show()
+        }
+    }
+    val micPermission = rememberLauncherForActivityResult( ActivityResultContracts.RequestPermission()) {granted ->
+        if (granted) startVoice()
+        else Toast.makeText(ctx, "Debes habilitar el permiso para usar el micrófono", Toast.LENGTH_SHORT).show()
+    }
+
     var filter by remember { mutableStateOf("Todas") }
     val canCreate = UserRole.valueOf(user.role) != UserRole.CLIENT
 
@@ -141,7 +174,13 @@ fun RecipesScreen(user: UserEntity, vm: ContentViewModel, onOpen: (Long) -> Unit
             OutlinedTextField(
                 value = query, onValueChange = { query = it }, singleLine = true,
                 label = { Text("Buscar receta") }, leadingIcon = { Icon(Icons.Filled.Search, null) },
-                modifier = Modifier.fillMaxWidth().padding(16.dp, 12.dp, 16.dp, 0.dp)
+                modifier = Modifier.fillMaxWidth().padding(16.dp, 12.dp, 16.dp, 0.dp),
+                trailingIcon = {
+                    IconButton(onClick = {
+                        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) startVoice()
+                        else micPermission.launch(Manifest.permission.RECORD_AUDIO)
+                    }) { Icon(Icons.Filled.Mic, contentDescription = "Buscar por voz") }
+                },
             )
             LazyRow(contentPadding = PaddingValues(16.dp, 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(listOf("Todas", "Favoritas") + Categories.recipe) { c ->

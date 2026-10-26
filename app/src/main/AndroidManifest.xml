@@ -8,7 +8,9 @@
     <!-- Recurso nativo 2: vibración (retroalimentación háptica ante errores) -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
-
+    <!-- Recurso nativo 3: Micrófono para buscar recetas por voz -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
     <application
         android:name=".MartiniApp"
         android:allowBackup="false"
