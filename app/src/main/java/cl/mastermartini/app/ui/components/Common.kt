@@ -11,6 +11,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -71,22 +75,47 @@ fun ValidatedField(
 }
 
 @Composable
-fun DropdownField(label: String, value: String, options: List<String>, icon: ImageVector, onSelect: (String) -> Unit) {
+fun DropdownField(
+    label: String,
+    value: String,
+    options: List<String>,
+    icon: ImageVector,
+    onSelect: (String) -> Unit
+) {
     var open by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = open, onExpandedChange = { open = it }) {
+
+    ExposedDropdownMenuBox(
+        expanded = open,
+        onExpandedChange = { open = it }
+    ) {
         OutlinedTextField(
-            value = value, onValueChange = {}, readOnly = true,
+            value = value,
+            onValueChange = {},
+            readOnly = true,
             label = { Text(label) },
             leadingIcon = { Icon(icon, null) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = open) },
-            modifier = Modifier.menuAnchor().fillMaxWidth()
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
+                .fillMaxWidth()
         )
-        ExposedDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            options.forEach { o -> DropdownMenuItem(text = { Text(o) }, onClick = { onSelect(o); open = false }) }
+
+        ExposedDropdownMenu(
+            expanded = open,
+            onDismissRequest = { open = false }
+        ) {
+            options.forEach { o ->
+                DropdownMenuItem(
+                    text = { Text(o) },
+                    onClick = {
+                        onSelect(o)
+                        open = false
+                    }
+                )
+            }
         }
     }
 }
-
 @Composable
 fun VideoPreview(url: String, modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
