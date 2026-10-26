@@ -56,7 +56,7 @@ import androidx.core.content.ContextCompat
 
 
 @Composable
-fun FeedScreen(user: UserEntity, vm: ContentViewModel, onNewPost: () -> Unit, onQuiz: () -> Unit) {
+fun FeedScreen(user: UserEntity, vm: ContentViewModel, onNewPost: () -> Unit, onEditPost: (Long) -> Unit, onQuiz: () -> Unit) {
     val posts by vm.posts.collectAsState()
     val role = UserRole.valueOf(user.role)
     Box(Modifier.fillMaxSize()) {
@@ -80,7 +80,9 @@ fun FeedScreen(user: UserEntity, vm: ContentViewModel, onNewPost: () -> Unit, on
             }
             if (posts.isEmpty()) item { Text("Aún no hay publicaciones.") }
             items(posts, key = { it.id }) { p ->
-                PostCard(p, canDelete = role == UserRole.MARKETING, onDelete = { vm.deletePost(p.id) }, modifier = Modifier.animateItem())
+                PostCard(p, canManage = role == UserRole.MARKETING,
+                    onEdit = { vm.prepareEditPost(p); onEditPost(p.id) },
+                    onDelete = { vm.deletePost(p.id) }, modifier = Modifier.animateItem())
             }
         }
         if (role == UserRole.MARKETING) {
@@ -93,12 +95,15 @@ fun FeedScreen(user: UserEntity, vm: ContentViewModel, onNewPost: () -> Unit, on
 }
 
 @Composable
-private fun PostCard(p: PostEntity, canDelete: Boolean, onDelete: () -> Unit, modifier: Modifier = Modifier) {
+private fun PostCard(p: PostEntity, canManage: Boolean, onEdit: () -> Unit, onDelete: () -> Unit, modifier: Modifier = Modifier) {
     Card(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(p.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                if (canDelete) IconButton(onClick = onDelete) { Icon(Icons.Filled.Delete, "Eliminar publicación") }
+                if (canManage) {
+                    IconButton(onClick = onEdit) { Icon(Icons.Filled.Edit, "Editar publicación") }
+                    IconButton(onClick = onDelete) { Icon(Icons.Filled.Delete, "Eliminar publicación") }
+                }
             }
             if (p.videoUrl.isNotBlank()) VideoPreview(p.videoUrl)
             Text(p.body, style = MaterialTheme.typography.bodyLarge)
@@ -106,9 +111,8 @@ private fun PostCard(p: PostEntity, canDelete: Boolean, onDelete: () -> Unit, mo
         }
     }
 }
-
 @Composable
-fun PostFormScreen(user: UserEntity, vm: ContentViewModel, onDone: () -> Unit) {
+fun PostFormScreen(user: UserEntity, vm: ContentViewModel, editing: PostEntity? = null, onDone: () -> Unit) {
     val f = vm.postForm
     val ctx = LocalContext.current
     val haptics = LocalHaptics.current
@@ -119,7 +123,12 @@ fun PostFormScreen(user: UserEntity, vm: ContentViewModel, onDone: () -> Unit) {
         ValidatedField("Enlace de video (opcional)", f.value("videoUrl"), { f.set("videoUrl", it) }, f.error("videoUrl"), f.isValid("videoUrl"),
             Icons.Filled.Link, imeAction = ImeAction.Done)
         VideoHint(f.value("videoUrl"))
-        Button(onClick = { vm.savePost(user, { buzz(ctx, haptics) }, onDone) }, Modifier.fillMaxWidth().height(56.dp)) { Text("Publicar") }
+        Button(onClick = {
+            if (editing == null) vm.savePost(user, { buzz(ctx, haptics) }, onDone)
+            else vm.updatePost(editing, { buzz(ctx, haptics) }, onDone)
+        }, Modifier.fillMaxWidth().height(56.dp)) {
+            Text(if (editing == null) "Publicar" else "Guardar cambios")
+        }
     }
 }
 
@@ -228,7 +237,7 @@ private fun RecipeCard(r: RecipeEntity, isFav: Boolean, onFav: () -> Unit, onCli
 }
 
 @Composable
-fun RecipeDetailScreen(id: Long, user: UserEntity, vm: ContentViewModel, onBack: () -> Unit) {
+fun RecipeDetailScreen(id: Long, user: UserEntity, vm: ContentViewModel, onEdit:() -> Unit, onBack: () -> Unit) {
     val recipe by remember(id) { vm.recipe(id) }.collectAsState(null)
     val ctx = LocalContext.current
     val r = recipe ?: return
@@ -247,6 +256,9 @@ fun RecipeDetailScreen(id: Long, user: UserEntity, vm: ContentViewModel, onBack:
         r.ingredients.lines().filter { it.isNotBlank() }.forEach { Text("• $it", style = MaterialTheme.typography.bodyLarge) }
         SectionTitle("Preparación")
         r.steps.lines().filter { it.isNotBlank() }.forEachIndexed { i, s -> Text("${i + 1}. $s", style = MaterialTheme.typography.bodyLarge) }
+        if (canDelete) Button(onClick = { vm.prepareEdit(r); onEdit() }, Modifier.fillMaxWidth().height(52.dp)) {
+            Icon(Icons.Filled.Edit, null); Spacer(Modifier.width(8.dp)); Text("Editar receta")
+        }
         if (canDelete) OutlinedButton(onClick = { vm.deleteRecipe(r.id); onBack() }, Modifier.fillMaxWidth()) {
             Icon(Icons.Filled.Delete, null); Spacer(Modifier.width(8.dp)); Text("Eliminar receta")
         }
@@ -254,7 +266,7 @@ fun RecipeDetailScreen(id: Long, user: UserEntity, vm: ContentViewModel, onBack:
 }
 
 @Composable
-fun RecipeFormScreen(user: UserEntity, vm: ContentViewModel, onDone: () -> Unit) {
+fun RecipeFormScreen(user: UserEntity, vm: ContentViewModel,editing: RecipeEntity? = null, onDone: () -> Unit) {
     val f = vm.recipeForm
     val ctx = LocalContext.current
     val haptics = LocalHaptics.current
@@ -270,6 +282,10 @@ fun RecipeFormScreen(user: UserEntity, vm: ContentViewModel, onDone: () -> Unit)
         ValidatedField("Enlace de video (YouTube u otro, opcional)", f.value("videoUrl"), { f.set("videoUrl", it) }, f.error("videoUrl"), f.isValid("videoUrl"),
             Icons.Filled.Link, imeAction = ImeAction.Done)
         VideoHint(f.value("videoUrl"))
-        Button(onClick = { vm.saveRecipe(user, { buzz(ctx, haptics) }, onDone) }, Modifier.fillMaxWidth().height(56.dp)) { Text("Guardar receta") }
-    }
+        Button(onClick = {
+            if (editing == null) vm.saveRecipe(user, { buzz(ctx, haptics) }, onDone)
+            else vm.updateRecipe(editing, { buzz(ctx, haptics) }, onDone)
+        }, Modifier.fillMaxWidth().height(56.dp)) {
+            Text(if (editing == null) "Guardar receta" else "Guardar cambios")
+        }    }
 }

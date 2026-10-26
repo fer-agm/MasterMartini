@@ -27,7 +27,7 @@ data class RecipeEntity(
     val description: String,
     val ingredients: String,
     val steps: String,
-    val videoUrl: String = "",   // solo el ENLACE; el video nunca se guarda en la app
+    val videoUrl: String = "",
     val authorId: Long,
     val authorName: String,
     val createdAt: Long = System.currentTimeMillis()

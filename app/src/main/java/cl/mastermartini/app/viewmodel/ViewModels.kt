@@ -120,6 +120,30 @@ class ContentViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun prepareEdit(r: RecipeEntity) {
+        val f = recipeForm
+        f.reset()
+        f.set("title", r.title)
+        f.set("category", r.category)
+        f.set("description", r.description)
+        f.set("ingredients", r.ingredients)
+        f.set("steps", r.steps)
+        f.set("videoUrl", r.videoUrl)
+    }
+
+    fun updateRecipe(original: RecipeEntity, onInvalid: () -> Unit, onDone: () -> Unit) {
+        val f = recipeForm
+        if (!f.validateAll()) { onInvalid(); return }
+        viewModelScope.launch {
+            // copy() conserva id, autor y fecha de creación
+            repo.updateRecipe(original.copy(
+                title = f.value("title").trim(), category = f.value("category"),
+                description = f.value("description").trim(), ingredients = f.value("ingredients").trim(),
+                steps = f.value("steps").trim(), videoUrl = f.value("videoUrl").trim()))
+            f.reset(); onDone()
+        }
+    }
+
     fun savePost(user: UserEntity, onInvalid: () -> Unit, onDone: () -> Unit) {
         val f = postForm
         if (!f.validateAll()) { onInvalid(); return }
@@ -130,11 +154,30 @@ class ContentViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun prepareEditPost(p: PostEntity) {
+        val f = postForm
+        f.reset()
+        f.set("title", p.title)
+        f.set("body", p.body)
+        f.set("videoUrl", p.videoUrl)
+    }
+
+    fun updatePost(original: PostEntity, onInvalid: () -> Unit, onDone: () -> Unit) {
+        val f = postForm
+        if (!f.validateAll()) { onInvalid(); return }
+        viewModelScope.launch {
+            // copy() conserva id, autor y fecha original
+            repo.updatePost(original.copy(
+                title = f.value("title").trim(), body = f.value("body").trim(),
+                videoUrl = f.value("videoUrl").trim()))
+            f.reset(); onDone()
+        }
+    }
+
     fun deleteRecipe(id: Long) { viewModelScope.launch { repo.deleteRecipe(id) } }
     fun deletePost(id: Long) { viewModelScope.launch { repo.deletePost(id) } }
 }
 
-/** Encuesta de intereses + foto de perfil (cámara). */
 class ProfileViewModel(app: Application) : AndroidViewModel(app) {
     private val repo = app.container.repo
 

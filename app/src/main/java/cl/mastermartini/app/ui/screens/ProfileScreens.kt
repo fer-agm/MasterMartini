@@ -65,7 +65,6 @@ fun ProfileScreen(
     val ctx = LocalContext.current
     val role = UserRole.valueOf(user.role)
 
-    // Recurso nativo: CÁMARA, con solicitud de permiso en tiempo de ejecución y manejo de rechazo.
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bmp ->
         if (bmp != null) vm.savePhoto(user, bmp)
     }

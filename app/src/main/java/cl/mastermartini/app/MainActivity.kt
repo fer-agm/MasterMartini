@@ -79,6 +79,8 @@ private val tabs = listOf(
 private fun titleFor(route: String?) = when {
     route == null -> ""
     route.startsWith("recipe/") -> "Receta"
+    route.startsWith("recipe_edit/") -> "Editar receta"
+    route.startsWith("post_edit/") -> "Editar publicación"
     else -> when (route) {
         "feed" -> "Master Martini"; "recipes" -> "Recetas"; "profile" -> "Mi perfil"
         "accessibility" -> "Accesibilidad"; "recipe_form" -> "Nueva receta"; "post_form" -> "Nueva publicación"
@@ -91,7 +93,7 @@ fun openWhatsApp(
     phone: String,
     message: String = "Hola Master Martini, tengo una consulta..."
 ) {
-    val number = phone.filter { it.isDigit() }   // "+56 9 4457 0770" -> "56944570770"
+    val number = phone.filter { it.isDigit() }
     val text = Uri.encode(message)
     val urls = listOf(
         "https://api.whatsapp.com/send?phone=$number&text=$text",
@@ -146,10 +148,27 @@ private fun MainNav(user: UserEntity, auth: AuthViewModel, settings: SettingsVie
     ) { pad ->
         NavHost(nav, startDestination = "feed", modifier = Modifier.padding(pad),
             enterTransition = { fadeIn() }, exitTransition = { fadeOut() }) {
-            composable("feed") { FeedScreen(user, content, onNewPost = { nav.navigate("post_form") }, onQuiz = { nav.navigate("quiz") }) }
-            composable("recipes") { RecipesScreen(user, content, onOpen = { nav.navigate("recipe/$it") }, onNew = { nav.navigate("recipe_form") }) }
-            composable("recipe/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) {
-                RecipeDetailScreen(it.arguments!!.getLong("id"), user, content) { nav.popBackStack() }
+            composable("feed") {
+                FeedScreen(user, content,
+                    onNewPost = { content.postForm.reset(); nav.navigate("post_form") },   // limpia restos de una edición
+                    onEditPost = { id -> nav.navigate("post_edit/$id") },
+                    onQuiz = { nav.navigate("quiz") })
+            }
+            composable("post_edit/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
+                val id = entry.arguments!!.getLong("id")
+                val posts by content.posts.collectAsState()
+                posts.firstOrNull { it.id == id }?.let { PostFormScreen(user, content, editing = it) { nav.popBackStack() } }
+            }
+            composable("recipes") { RecipesScreen(user, content, onOpen = { nav.navigate("recipe/$it") }, onNew = { content.recipeForm.reset(); nav.navigate("recipe_form") }) }
+            composable("recipe/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
+                val id = entry.arguments!!.getLong("id")
+                RecipeDetailScreen(id, user, content, onEdit = { nav.navigate("recipe_edit/$id") }) { nav.popBackStack() }
+            }
+            composable("recipe_edit/{id}", arguments = listOf(navArgument("id") {type = NavType.LongType})) { entry ->
+                val id = entry.arguments!!.getLong("id")
+                val recipe by remember(id) { content.recipe(id) }.collectAsState(null)
+                recipe?.let { RecipeFormScreen(user, content, editing = it) { nav.popBackStack() } }
+
             }
             composable("recipe_form") { RecipeFormScreen(user, content) { nav.popBackStack() } }
             composable("post_form") { PostFormScreen(user, content) { nav.popBackStack() } }

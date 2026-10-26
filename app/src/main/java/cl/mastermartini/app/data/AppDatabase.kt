@@ -21,6 +21,7 @@ interface RecipeDao {
     @Query("SELECT * FROM recipes ORDER BY createdAt DESC") fun observeAll(): Flow<List<RecipeEntity>>
     @Query("SELECT * FROM recipes WHERE id = :id") fun observe(id: Long): Flow<RecipeEntity?>
     @Query("DELETE FROM recipes WHERE id = :id") suspend fun delete(id: Long)
+    @Update suspend fun update(r: RecipeEntity)
 }
 
 @Dao
@@ -28,6 +29,7 @@ interface PostDao {
     @Insert suspend fun insert(p: PostEntity): Long
     @Query("SELECT * FROM posts ORDER BY createdAt DESC") fun observeAll(): Flow<List<PostEntity>>
     @Query("DELETE FROM posts WHERE id = :id") suspend fun delete(id: Long)
+    @Update suspend fun update(p: PostEntity)
 }
 
 @Dao

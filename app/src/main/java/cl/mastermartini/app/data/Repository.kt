@@ -32,9 +32,10 @@ class Repository(private val db: AppDatabase) {
     fun observeRecipe(id: Long) = db.recipes().observe(id)
     suspend fun addRecipe(r: RecipeEntity) = db.recipes().insert(r)
     suspend fun deleteRecipe(id: Long) { db.favorites().deleteForRecipe(id); db.recipes().delete(id) }
-
+    suspend fun updateRecipe(r: RecipeEntity) = db.recipes().update(r)
     fun observePosts() = db.posts().observeAll()
     suspend fun addPost(p: PostEntity) = db.posts().insert(p)
+    suspend fun updatePost(p: PostEntity) = db.posts().update(p)
     suspend fun deletePost(id: Long) = db.posts().delete(id)
 
     fun observeFavorites(userId: Long): Flow<Set<Long>> = db.favorites().observe(userId).map { it.toSet() }
